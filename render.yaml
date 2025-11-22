@@ -3,7 +3,7 @@ services:
     name: nus-nextbus-gateway
     env: node
     plan: starter
-    rootDir: .
+    repo: https://github.com/EdwardZehuaZhang/nus-nextbus-redesign-be
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /health
