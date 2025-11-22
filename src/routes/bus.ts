@@ -24,7 +24,7 @@ router.get('/publicity', async (_req: Request, res: Response): Promise<void> => 
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;      return;
+      return;
     }
 
     const data = await nusNextBusClient.get('/publicity');
@@ -33,7 +33,7 @@ router.get('/publicity', async (_req: Request, res: Response): Promise<void> => 
     res.json(data);
   } catch (error) {
     logger.error({ err: error }, 'Error fetching publicity');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch publicity data' });
   }
 });
 
@@ -48,7 +48,8 @@ router.get('/busstops', async (_req: Request, res: Response): Promise<void> => {
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/BusStops');
     await cacheService.set(cacheKey, data, TTL.STATIC);
@@ -56,7 +57,7 @@ router.get('/busstops', async (_req: Request, res: Response): Promise<void> => {
     res.json(data);
   } catch (error) {
     logger.error({ err: error }, 'Error fetching bus stops');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch bus stops data' });
   }
 });
 
@@ -69,6 +70,7 @@ router.get('/pickuppoint', async (req: Request, res: Response): Promise<void> =>
 
   if (!routeCode) {
     res.status(400).json({ error: 'route_code query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:pickuppoint:${routeCode}`;
@@ -77,7 +79,8 @@ router.get('/pickuppoint', async (req: Request, res: Response): Promise<void> =>
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/PickupPoint', {
       params: { route_code: routeCode },
@@ -87,7 +90,7 @@ router.get('/pickuppoint', async (req: Request, res: Response): Promise<void> =>
     res.json(data);
   } catch (error) {
     logger.error({ err: error, routeCode }, 'Error fetching pickup points');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch pickup points data' });
   }
 });
 
@@ -100,6 +103,7 @@ router.get('/shuttleservice', async (req: Request, res: Response): Promise<void>
 
   if (!busStopName) {
     res.status(400).json({ error: 'busstopname query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:shuttleservice:${busStopName}`;
@@ -108,7 +112,8 @@ router.get('/shuttleservice', async (req: Request, res: Response): Promise<void>
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/ShuttleService', {
       params: { busstopname: busStopName },
@@ -118,7 +123,7 @@ router.get('/shuttleservice', async (req: Request, res: Response): Promise<void>
     res.json(data);
   } catch (error) {
     logger.error({ err: error, busStopName }, 'Error fetching shuttle service');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch shuttle service data' });
   }
 });
 
@@ -131,6 +136,7 @@ router.get('/activebus', async (req: Request, res: Response): Promise<void> => {
 
   if (!routeCode) {
     res.status(400).json({ error: 'route_code query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:activebus:${routeCode}`;
@@ -139,7 +145,8 @@ router.get('/activebus', async (req: Request, res: Response): Promise<void> => {
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/ActiveBus', {
       params: { route_code: routeCode },
@@ -149,7 +156,7 @@ router.get('/activebus', async (req: Request, res: Response): Promise<void> => {
     res.json(data);
   } catch (error) {
     logger.error({ err: error, routeCode }, 'Error fetching active buses');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch active buses data' });
   }
 });
 
@@ -162,6 +169,7 @@ router.get('/buslocation', async (req: Request, res: Response): Promise<void> =>
 
   if (!vehPlate) {
     res.status(400).json({ error: 'veh_plate query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:buslocation:${vehPlate}`;
@@ -170,7 +178,8 @@ router.get('/buslocation', async (req: Request, res: Response): Promise<void> =>
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/BusLocation', {
       params: { veh_plate: vehPlate },
@@ -180,7 +189,7 @@ router.get('/buslocation', async (req: Request, res: Response): Promise<void> =>
     res.json(data);
   } catch (error) {
     logger.error({ err: error, vehPlate }, 'Error fetching bus location');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch bus location data' });
   }
 });
 
@@ -193,6 +202,7 @@ router.get('/routeminmaxtime', async (req: Request, res: Response): Promise<void
 
   if (!routeCode) {
     res.status(400).json({ error: 'route_code query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:routeminmaxtime:${routeCode}`;
@@ -201,7 +211,8 @@ router.get('/routeminmaxtime', async (req: Request, res: Response): Promise<void
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/RouteMinMaxTime', {
       params: { route_code: routeCode },
@@ -211,7 +222,7 @@ router.get('/routeminmaxtime', async (req: Request, res: Response): Promise<void
     res.json(data);
   } catch (error) {
     logger.error({ err: error, routeCode }, 'Error fetching route min/max time');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch route min/max time data' });
   }
 });
 
@@ -226,7 +237,8 @@ router.get('/servicedescription', async (_req: Request, res: Response): Promise<
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/ServiceDescription');
     await cacheService.set(cacheKey, data, TTL.STATIC);
@@ -234,7 +246,7 @@ router.get('/servicedescription', async (_req: Request, res: Response): Promise<
     res.json(data);
   } catch (error) {
     logger.error({ err: error }, 'Error fetching service description');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch service description data' });
   }
 });
 
@@ -249,7 +261,8 @@ router.get('/announcements', async (_req: Request, res: Response): Promise<void>
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/Announcements');
     await cacheService.set(cacheKey, data, TTL.SEMI_STATIC);
@@ -257,7 +270,7 @@ router.get('/announcements', async (_req: Request, res: Response): Promise<void>
     res.json(data);
   } catch (error) {
     logger.error({ err: error }, 'Error fetching announcements');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch announcements data' });
   }
 });
 
@@ -272,7 +285,8 @@ router.get('/tickertapes', async (_req: Request, res: Response): Promise<void> =
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/TickerTapes');
     await cacheService.set(cacheKey, data, TTL.SEMI_STATIC);
@@ -280,7 +294,7 @@ router.get('/tickertapes', async (_req: Request, res: Response): Promise<void> =
     res.json(data);
   } catch (error) {
     logger.error({ err: error }, 'Error fetching ticker tapes');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch ticker tapes data' });
   }
 });
 
@@ -293,6 +307,7 @@ router.get('/checkpoint', async (req: Request, res: Response): Promise<void> => 
 
   if (!routeCode) {
     res.status(400).json({ error: 'route_code query parameter is required' });
+    return;
   }
 
   const cacheKey = `bus:checkpoint:${routeCode}`;
@@ -301,7 +316,8 @@ router.get('/checkpoint', async (req: Request, res: Response): Promise<void> => 
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await nusNextBusClient.get('/CheckPoint', {
       params: { route_code: routeCode },
@@ -311,7 +327,7 @@ router.get('/checkpoint', async (req: Request, res: Response): Promise<void> => 
     res.json(data);
   } catch (error) {
     logger.error({ err: error, routeCode }, 'Error fetching checkpoints');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch checkpoints data' });
   }
 });
 

@@ -11,6 +11,8 @@ import { cacheService } from '@/services/cache.js';
 import busRoutes from '@/routes/bus.js';
 import ltaRoutes from '@/routes/lta.js';
 import googleRoutesRoutes from '@/routes/google-routes.js';
+import googlePlacesRoutes from '@/routes/google-places.js';
+import googleDirectionsRoutes from '@/routes/google-directions.js';
 
 // Validate configuration on startup
 try {
@@ -84,6 +86,8 @@ app.get('/health', (_req, res) => {
 app.use('/api/bus', busRoutes);
 app.use('/api/lta', ltaRoutes);
 app.use('/api/routes', googleRoutesRoutes);
+app.use('/api/google/places', googlePlacesRoutes);
+app.use('/api/google/directions', googleDirectionsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

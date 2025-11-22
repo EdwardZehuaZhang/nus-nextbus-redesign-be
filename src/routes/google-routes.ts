@@ -7,8 +7,9 @@ import { createStrictRateLimiter } from '@/middleware/rate-limiter.js';
 const router = Router();
 
 // Apply strict rate limiting to Google Routes API (expensive)
-// 30 requests per minute per IP
-router.use(createStrictRateLimiter(30, 60000));
+// 800 requests per minute per IP - handles internal route finder making 17+ compute calls per page load
+// Each route search triggers many requests (transit, walking fallbacks, internal route variants with duplicates)
+router.use(createStrictRateLimiter(800, 60000));
 
 // Cache TTL for routes (in seconds)
 const ROUTE_CACHE_TTL = 300; // 5 minutes
@@ -26,6 +27,7 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
       error: 'Invalid request body',
       message: 'origin and destination are required',
     });
+    return;
   }
 
   // Create a cache key based on request body (normalized)
@@ -40,13 +42,24 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
     if (cached) {
       logger.debug({ cacheKey }, 'Routes cache hit');
       res.json(cached);
-    return;    }
+      return;
+    }
 
-    // Field mask to specify which fields to return
+    // Extract fieldMask from body or use default
     const fieldMask = requestBody.fieldMask || [
+      // Route-level
       'routes.duration',
       'routes.distanceMeters',
       'routes.polyline.encodedPolyline',
+      'routes.localizedValues',
+      'routes.description',
+      'routes.travelAdvisory.transitFare',
+      // Leg-level (include duration/distance for frontend calculations)
+      'routes.legs.duration',
+      'routes.legs.distanceMeters',
+      'routes.legs.polyline.encodedPolyline',
+      'routes.legs.startLocation',
+      'routes.legs.endLocation',
       'routes.legs.steps.distanceMeters',
       'routes.legs.steps.staticDuration',
       'routes.legs.steps.polyline',
@@ -56,14 +69,14 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
       'routes.legs.steps.travelMode',
       'routes.legs.steps.transitDetails',
       'routes.legs.stepsOverview',
-      'routes.travelAdvisory.transitFare',
-      'routes.localizedValues',
-      'routes.description',
     ].join(',');
+
+    // Remove fieldMask from request body if present (it goes in header, not body)
+    const { fieldMask: _, ...cleanRequestBody } = requestBody;
 
     const data = await googleRoutesClient.post(
       '/directions/v2:computeRoutes',
-      requestBody,
+      cleanRequestBody,
       {
         headers: {
           'X-Goog-FieldMask': fieldMask,
@@ -76,7 +89,7 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
     res.json(data);
   } catch (error) {
     logger.error({ err: error, body: requestBody }, 'Error computing routes');
-    throw error;
+    res.status(500).json({ error: 'Failed to compute routes' });
   }
 });
 

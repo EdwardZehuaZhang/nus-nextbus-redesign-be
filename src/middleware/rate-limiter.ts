@@ -57,18 +57,18 @@ export function createStrictRateLimiter(maxRequests = 30, windowMs = 60000) {
     standardHeaders: true,
     legacyHeaders: false,
     message: {
-      error: 'Rate limit exceeded for this endpoint.',
+      error: `Rate limit exceeded for this endpoint. Max ${maxRequests} requests per ${Math.ceil(windowMs / 1000)} seconds.`,
       retryAfter: Math.ceil(windowMs / 1000),
     },
     handler: (req: unknown, res: unknown) => {
       logger.warn(
-        { ip: (req as { ip?: string }).ip, path: (req as { path?: string }).path },
+        { ip: (req as { ip?: string }).ip, path: (req as { path?: string }).path, max: maxRequests },
         'Strict rate limit exceeded'
       );
       (res as { status: (code: number) => { json: (data: unknown) => void } })
         .status(429)
         .json({
-          error: 'Rate limit exceeded for this endpoint.',
+          error: `Rate limit exceeded for this endpoint. Max ${maxRequests} requests per ${Math.ceil(windowMs / 1000)} seconds.`,
           retryAfter: Math.ceil(windowMs / 1000),
         });
     },

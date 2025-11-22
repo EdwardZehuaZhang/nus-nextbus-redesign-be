@@ -29,7 +29,7 @@ export const config = {
   rateLimit: {
     enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '120', 10),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '2000', 10), // Very high limit - internal route finder makes 137+ requests per page load with duplicates
   },
   cache: {
     enabled: process.env.CACHE_ENABLED !== 'false',

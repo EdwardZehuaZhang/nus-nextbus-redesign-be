@@ -24,7 +24,8 @@ router.get('/busstops', async (req: Request, res: Response): Promise<void> => {
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const data = await ltaClient.get('/BusStops', {
       params: { $skip: skip },
@@ -34,7 +35,7 @@ router.get('/busstops', async (req: Request, res: Response): Promise<void> => {
     res.json(data);
   } catch (error) {
     logger.error({ err: error, skip }, 'Error fetching LTA bus stops');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch LTA bus stops data' });
   }
 });
 
@@ -54,7 +55,8 @@ router.get('/busroutes', async (req: Request, res: Response): Promise<void> => {
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const params: Record<string, string> = {};
     if (serviceNo) params.ServiceNo = serviceNo;
@@ -66,7 +68,7 @@ router.get('/busroutes', async (req: Request, res: Response): Promise<void> => {
     res.json(data);
   } catch (error) {
     logger.error({ err: error, serviceNo, direction }, 'Error fetching LTA bus routes');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch LTA bus routes data' });
   }
 });
 
@@ -80,6 +82,7 @@ router.get('/busarrival', async (req: Request, res: Response): Promise<void> => 
 
   if (!busStopCode) {
     res.status(400).json({ error: 'busStopCode query parameter is required' });
+    return;
   }
 
   const cacheKey = serviceNo
@@ -90,7 +93,8 @@ router.get('/busarrival', async (req: Request, res: Response): Promise<void> => 
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       res.json(cached);
-    return;    }
+      return;
+    }
 
     const params: Record<string, string> = {
       BusStopCode: busStopCode,
@@ -103,7 +107,7 @@ router.get('/busarrival', async (req: Request, res: Response): Promise<void> => 
     res.json(data);
   } catch (error) {
     logger.error({ err: error, busStopCode, serviceNo }, 'Error fetching LTA bus arrival');
-    throw error;
+    res.status(500).json({ error: 'Failed to fetch LTA bus arrival data' });
   }
 });
 
