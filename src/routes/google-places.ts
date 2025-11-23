@@ -122,4 +122,59 @@ router.get('/details', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+/**
+ * GET /api/google/places/findplace
+ * Find a place from a text query
+ * Query params:
+ *   - input: Text query (required)
+ *   - inputtype: Type of input (textquery or phonenumber) (optional, defaults to textquery)
+ *   - fields: Comma-separated fields to return (optional)
+ *   - locationbias: Location bias (optional, e.g., "point:lat,lng")
+ */
+router.get('/findplace', async (req: Request, res: Response): Promise<void> => {
+  const { input, inputtype, fields, locationbias } = req.query;
+
+  if (!input || typeof input !== 'string') {
+    res.status(400).json({
+      error: 'Invalid request',
+      message: 'input query parameter is required',
+    });
+    return;
+  }
+
+  const cacheKey = `places:findplace:${input}:${inputtype || 'textquery'}:${fields || 'default'}:${locationbias || ''}`;
+
+  try {
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      logger.debug({ cacheKey }, 'Places findplace cache hit');
+      res.json(cached);
+      return;
+    }
+
+    const data = await googlePlacesClient.findPlaceFromQuery({
+      input,
+      inputtype: (inputtype as 'textquery' | 'phonenumber') || 'textquery',
+      fields: fields as string | undefined,
+      locationbias: locationbias as string | undefined,
+    });
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      logger.error({ status: data.status }, 'Places findplace error');
+      res.status(400).json({
+        error: 'Places API error',
+        message: `API returned status: ${data.status}`,
+      });
+      return;
+    }
+
+    await cacheService.set(cacheKey, data, CACHE_TTL.DETAILS);
+
+    res.json(data);
+  } catch (error) {
+    logger.error({ err: error, input }, 'Error finding place from query');
+    res.status(500).json({ error: 'Failed to find place' });
+  }
+});
+
 export default router;

@@ -85,6 +85,24 @@ export class GooglePlacesClient {
     });
     return response.data;
   }
+
+  async findPlaceFromQuery(params: {
+    input: string;
+    inputtype: 'textquery' | 'phonenumber';
+    fields?: string;
+    locationbias?: string;
+  }): Promise<any> {
+    const response = await this.client.get('/findplacefromtext/json', {
+      params: {
+        input: params.input,
+        inputtype: params.inputtype,
+        fields: params.fields || 'place_id,name',
+        locationbias: params.locationbias,
+        key: this.apiKey,
+      },
+    });
+    return response.data;
+  }
 }
 
 export const googlePlacesClient = new GooglePlacesClient();
