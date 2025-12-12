@@ -31,12 +31,44 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // Create a cache key based on request body (normalized)
+  // Normalize intermediate waypoints to Google's expected "intermediates" field
+  // Supports FE sending either `intermediateWaypoints` or `intermediates`, and lat/lng or latitude/longitude
+  const normalizeLatLng = (wp: any) => {
+    if (!wp) return null;
+    const src = wp.location?.latLng || wp.latLng || wp.location;
+    const lat = src?.lat ?? src?.latitude;
+    const lng = src?.lng ?? src?.longitude;
+    if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+    return {
+      location: { latLng: { latitude: lat, longitude: lng } },
+      placeId: wp.placeId,
+    };
+  };
+
+  const rawIntermediates = Array.isArray(requestBody.intermediates)
+    ? requestBody.intermediates
+    : Array.isArray(requestBody.intermediateWaypoints)
+      ? requestBody.intermediateWaypoints
+      : [];
+
+  const intermediates = rawIntermediates
+    .map(normalizeLatLng)
+    .filter(Boolean);
+
+  // Build a normalized request body for Google
+  const cleanRequestBody = {
+    ...requestBody,
+    intermediates,
+  };
+  // Remove legacy field if present to avoid confusion
+  delete (cleanRequestBody as any).intermediateWaypoints;
+
+  // Create a cache key based on normalized request body
   const cacheKey = `routes:${JSON.stringify({
-    origin: requestBody.origin,
-    destination: requestBody.destination,
-    intermediateWaypoints: requestBody.intermediateWaypoints,
-    travelMode: requestBody.travelMode || 'DRIVE',
+    origin: cleanRequestBody.origin,
+    destination: cleanRequestBody.destination,
+    intermediates: cleanRequestBody.intermediates,
+    travelMode: cleanRequestBody.travelMode || 'DRIVE',
   })}`;
 
   try {
@@ -74,11 +106,11 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
     ].join(',');
 
     // Remove fieldMask from request body if present (it goes in header, not body)
-    const { fieldMask: _, ...cleanRequestBody } = requestBody;
+    const { fieldMask: _, ...bodyWithoutFieldMask } = cleanRequestBody as any;
 
     const data = await googleRoutesClient.post(
       '/directions/v2:computeRoutes',
-      cleanRequestBody,
+      bodyWithoutFieldMask,
       {
         headers: {
           'X-Goog-FieldMask': fieldMask,
