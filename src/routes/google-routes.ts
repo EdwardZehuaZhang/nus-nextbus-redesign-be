@@ -18,6 +18,7 @@ const ROUTE_CACHE_TTL = 300; // 5 minutes
  * POST /api/routes/compute
  * Compute routes using Google Maps Routes API
  * Body should match Google Routes API ComputeRoutes request format
+ * Supports intermediateWaypoints for multi-stop routing
  */
 router.post('/compute', async (req: Request, res: Response): Promise<void> => {
   const requestBody = req.body;
@@ -34,6 +35,7 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
   const cacheKey = `routes:${JSON.stringify({
     origin: requestBody.origin,
     destination: requestBody.destination,
+    intermediateWaypoints: requestBody.intermediateWaypoints,
     travelMode: requestBody.travelMode || 'DRIVE',
   })}`;
 
