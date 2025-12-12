@@ -136,7 +136,17 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
 
     res.json(data);
   } catch (error) {
-    logger.error({ err: error, body: requestBody }, 'Error computing routes');
+    console.error('[ROUTES] Error computing routes:', error);
+    logger.error(
+      {
+        err: error,
+        body: requestBody,
+        normalizedOrigin,
+        normalizedDestination,
+        intermediates,
+      },
+      'Error computing routes'
+    );
     res.status(500).json({ error: 'Failed to compute routes' });
   }
 });
