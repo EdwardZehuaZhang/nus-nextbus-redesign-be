@@ -33,7 +33,7 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
 
   // Normalize intermediate waypoints to Google's expected "intermediates" field
   // Supports FE sending either `intermediateWaypoints` or `intermediates`, and lat/lng or latitude/longitude
-  const normalizeLatLng = (wp: any) => {
+  const normalizeWaypoint = (wp: any) => {
     if (!wp) return null;
     const src = wp.location?.latLng || wp.latLng || wp.location;
     const lat = src?.lat ?? src?.latitude;
@@ -52,12 +52,26 @@ router.post('/compute', async (req: Request, res: Response): Promise<void> => {
       : [];
 
   const intermediates = rawIntermediates
-    .map(normalizeLatLng)
+    .map(normalizeWaypoint)
     .filter(Boolean);
+
+  // Normalize origin and destination
+  const normalizedOrigin = normalizeWaypoint(requestBody.origin);
+  const normalizedDestination = normalizeWaypoint(requestBody.destination);
+
+  if (!normalizedOrigin || !normalizedDestination) {
+    res.status(400).json({
+      error: 'Invalid origin or destination',
+      message: 'origin and destination must have valid lat/lng coordinates',
+    });
+    return;
+  }
 
   // Build a normalized request body for Google
   const cleanRequestBody = {
     ...requestBody,
+    origin: normalizedOrigin,
+    destination: normalizedDestination,
     intermediates,
   };
   // Remove legacy field if present to avoid confusion
