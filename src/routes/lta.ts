@@ -101,7 +101,7 @@ router.get('/busarrival', async (req: Request, res: Response): Promise<void> => 
     };
     if (serviceNo) params.ServiceNo = serviceNo;
 
-    const data = await ltaClient.get('/BusArrivalv2', { params });
+    const data = await ltaClient.get('/v3/BusArrival', { params });
     await cacheService.set(cacheKey, data, TTL.BUS_ARRIVAL);
 
     res.json(data);

@@ -12,6 +12,16 @@ export const config = {
     apiUrl: process.env.NUS_NEXTBUS_API_URL || 'https://nnextbus.nus.edu.sg',
     username: process.env.NUS_NEXTBUS_USERNAME || '',
     password: process.env.NUS_NEXTBUS_PASSWORD || '',
+    // SHA-256 fingerprints of expired leaf certs we still accept (NUS let its cert lapse on 23 Oct 2026).
+    // Only used when the cert's sole problem is expiry; a valid cert is always accepted as normal.
+    // Set to an empty string to turn the workaround off.
+    pinnedExpiredCerts: (
+      process.env.NUS_NEXTBUS_PINNED_EXPIRED_CERTS ??
+      '28:EE:7C:20:C5:59:CE:BB:D0:E0:B9:89:0C:FA:BF:9B:23:0E:1E:65:AC:E6:C7:3E:AC:FC:80:91:09:5F:39:5D'
+    )
+      .split(',')
+      .map(f => f.trim().toUpperCase())
+      .filter(Boolean),
   },
   lta: {
     apiUrl: process.env.LTA_API_URL || 'https://datamall2.mytransport.sg/ltaodataservice',
